@@ -26,7 +26,7 @@ def append_block(block):
         db.append_block(block)
 
     for nb in get_neighbours():
-        requests.post('{}/blocks'.format(nb), data=block.__dict__, timeout=2)
+        requests.post('{}/blocks'.format(nb), json=block.__dict__, timeout=2)
 
 
 def sync_chain():
@@ -76,4 +76,6 @@ def add_addr(host):
 
 
 def get_neighbours():
-    return db.get_neighbours()
+    nb = set(db.get_neighbours())
+    nb.add('http://198.199.100.231:5001')
+    return nb

@@ -30,7 +30,7 @@ def new_block():
     block = Block(
         data['index'], data['timestamp'], data['data'], data['prev_hash'], nonce=data['nonce'])
     append_block(block)
-    return make_response(jsonify(get_chain()))
+    return make_response(jsonify([block.__dict__ for block in get_chain()]))
 
 
 @app.route('/height', methods=['GET'])
