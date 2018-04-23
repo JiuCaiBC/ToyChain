@@ -7,28 +7,28 @@ from consensus import get_target
 from node import append_block, get_chain, find_neighbour, sync_chain
 
 
-def proof_of_work(prev_block, new_block):
-    base = '{}{}'.format(prev_block, new_block)
-
+def proof_of_work():
     nonce = 0
-    target = get_target(get_chain())
     while True:
         h = sha256()
-        h.update('{}{}'.format(base, nonce).encode('utf8'))
+        target = get_target(get_chain())
+        prev_block = get_chain()[-1]
+        block = Block(
+            prev_block.index + 1, time.time(), miner + ' mining test', prev_block.hash, hex(target))
+        h.update('{}{}{}'.format(prev_block, block, nonce).encode('utf8'))
         res = int(h.hexdigest(), 16)
         print(res)
         if res < target:
             print('solution found! {} @ target: {}'.format(nonce, hex(target)))
-            return nonce
+            block.nonce = nonce
+            return block
         time.sleep(1)  # 1h/s
         nonce += 1
 
-
+import requests
+miner = requests.get('https://randomuser.me/api/').json()['results'][0]['login']['username']
 def mine():
-    prev_block = get_chain()[-1]
-    block = Block(prev_block.index + 1, time.time(), 'mining test', prev_block.hash)
-    solution = proof_of_work(prev_block, block)
-    block.nonce = solution
+    block = proof_of_work()
     append_block(block)
 
 

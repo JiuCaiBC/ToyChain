@@ -1,4 +1,9 @@
 import datetime as dt
+import sys
+import os
+sys.path.append(
+    os.path.dirname(os.path.abspath(__file__))
+)
 
 import flask
 from flask import jsonify, make_response, request
@@ -28,8 +33,8 @@ def blocks():
 def new_block():
     data = request.get_json()
     block = Block(
-        data['index'], data['timestamp'], data['data'], data['prev_hash'], nonce=data['nonce'])
-    import pdb; pdb.set_trace()
+        data['index'], data['timestamp'], data['data'], data['prev_hash'], data['target'],
+        nonce=data['nonce'])
     append_block(block)
     return make_response(jsonify([block.__dict__ for block in get_chain()]))
 
@@ -39,8 +44,5 @@ def height():
     return make_response(jsonify(height=len(get_chain())))
 
 
-def main():
-    app.run(host='0.0.0.0', port=5001)
-
 if __name__ == '__main__':
-    main()
+    app.run(host='0.0.0.0', port=5001)

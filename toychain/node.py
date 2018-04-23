@@ -25,12 +25,15 @@ def append_block(block):
     h.update('{}{}{}'.format(chain[-1], block, block.nonce).encode('utf8'))
     if int(h.hexdigest(), 16) < get_target(chain):
         db.append_block(block)
+        for nb in get_neighbours():
+            if self_ip not in nb:
+                try:
+                    requests.post('{}/blocks'.format(nb), json=block.__dict__, timeout=1)
+                except:
+                    pass
     else:
         print('reject block: {}'.format(block.__dict__))
-
-    for nb in get_neighbours():
-        if self_ip not in nb:
-            requests.post('{}/blocks'.format(nb), json=block.__dict__)
+        print('solution: {} target: {}'.format(h.hexdigest(), hex(get_target(chain))))
 
 
 def sync_chain():
@@ -43,7 +46,7 @@ def sync_chain():
                 chain = [
                     Block(
                         data['index'], data['timestamp'], data['data'], data['prev_hash'],
-                        nonce=data['nonce'])
+                        data['target'], nonce=data['nonce'])
                     for data in r.json()
                 ]
                 db.dump_chain(chain)

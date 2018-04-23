@@ -19,24 +19,24 @@ class DAO:
             chain = [
                 Block(
                     block['index'], block['timestamp'], block['data'], block['prev_hash'],
-                    nonce=block['nonce'])
+                    block['target'], nonce=block['nonce'])
                 for block in chain]
         except:
             chain = [create_genesis_block()]
+            self.dump_chain(chain)
 
         return chain
 
     def get_block(self, block_hash):
         chain = self.get_chain()
         block = [block for block in chain if block.hash == block_hash]
-        assert len(block) == 1
         return block[0]
 
     def append_block(self, block):
         chain = self.get_chain()
-        assert block.index == chain[-1].index + 1
-        chain.append(block)
-        self.dump_chain(chain)
+        if block.index == chain[-1].index + 1:
+            chain.append(block)
+            self.dump_chain(chain)
 
     def dump_chain(self, chain):
         with open(self.db_path, 'w+') as f:

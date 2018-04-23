@@ -15,6 +15,7 @@ def get_target(block_chain):
         difficulty = max(BLOCK_TIME / recent_avg_block_time, 1)  # min. difficulty limited @ 1
 
     target = int(STANDARD_TARGET / difficulty)
+    print('Difficulty: {}, Target: {}'.format(difficulty, hex(target)))
     return target
 
 
