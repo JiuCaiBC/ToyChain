@@ -10,6 +10,7 @@ from consensus import get_longest_chain, get_target
 from dao import DAO
 
 db = DAO()
+self_ip = requests.get('http://httpbin.org/ip').json()['origin']
 
 
 def get_chain():
@@ -26,7 +27,8 @@ def append_block(block):
         db.append_block(block)
 
     for nb in get_neighbours():
-        requests.post('{}/blocks'.format(nb), json=block.__dict__, timeout=2)
+        if self_ip not in nb:
+            requests.post('{}/blocks'.format(nb), json=block.__dict__)
 
 
 def sync_chain():
