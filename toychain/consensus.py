@@ -1,4 +1,4 @@
-BLOCK_TIME = 16  # generate 1 block every 2 sec
+BLOCK_TIME = 8  # generate 1 block every 2 sec
 STANDARD_TARGET = int(int('f' * 64, 16) / BLOCK_TIME)  # derived from default network hash power of 1h/s
 DIFF_UPDATE_PERIOD = 6
 

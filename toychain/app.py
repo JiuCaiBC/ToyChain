@@ -29,6 +29,7 @@ def new_block():
     data = request.get_json()
     block = Block(
         data['index'], data['timestamp'], data['data'], data['prev_hash'], nonce=data['nonce'])
+    import pdb; pdb.set_trace()
     append_block(block)
     return make_response(jsonify([block.__dict__ for block in get_chain()]))
 

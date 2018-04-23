@@ -25,6 +25,8 @@ def append_block(block):
     h.update('{}{}{}'.format(chain[-1], block, block.nonce).encode('utf8'))
     if int(h.hexdigest(), 16) < get_target(chain):
         db.append_block(block)
+    else:
+        print('reject block: {}'.format(block.__dict__))
 
     for nb in get_neighbours():
         if self_ip not in nb:
