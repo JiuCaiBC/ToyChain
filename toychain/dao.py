@@ -39,7 +39,7 @@ class DAO:
         self.dump_chain(chain)
 
     def dump_chain(self, chain):           #？？？
-        with open(self.db_path, 'w+') as f:
+        with open(self.db_path, 'w+') as f:    #打开本地文件，w+ 覆盖之前的内容 命名为f／／／／w为打开方式 打开并且添加到文件末端
             json.dump([block.__dict__ for block in chain], f, indent=4)
 
     def add_addr(self, addr):             #？？？

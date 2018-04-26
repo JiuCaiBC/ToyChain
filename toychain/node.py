@@ -25,10 +25,10 @@ def append_block(block):  #添加区块
     h.update('{}{}{}'.format(chain[-1], block, block.nonce).encode('utf8'))
     if int(h.hexdigest(), 16) < get_target(chain):
         db.append_block(block)
-        for nb in get_neighbours():
+        for nb in get_neighbours():  #遍历邻居节点
             if self_ip not in nb:
                 try:
-                    requests.post('{}/blocks'.format(nb), json=block.__dict__, timeout=1)
+                    requests.post('{}/blocks'.format(nb), json=block.__dict__, timeout=1)     #nb 邻居ip地址
                 except:
                     pass
     else:
@@ -42,14 +42,14 @@ def sync_chain():   #同步最长链
         for nb in get_neighbours():
             r = requests.get('{}/height'.format(nb), timeout=2)
             if r.json()['height'] > len(chain):
-                r = requests.get('{}/blocks'.format(nb), timeout=2)
+                r = requests.get('{}/blocks'.format(nb), timeout=2)   #请求回复 区块list
                 chain = [
                     Block(
                         data['index'], data['timestamp'], data['data'], data['prev_hash'],
                         data['target'], nonce=data['nonce'])
-                    for data in r.json()
+                    for data in r.json()      #json转换Block       #  列表生成
                 ]
-                db.dump_chain(chain)
+                db.dump_chain(chain)   #DAO 保存到磁盘
                 print('refreshed chain from {}'.format(nb))
         time.sleep(1)
 
