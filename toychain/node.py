@@ -1,88 +1,68 @@
-import re
-import subprocess
-import time
-from hashlib import sha256
+import asyncio
+import async_timeout
+import json
+import logging
+import os
+import sys
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)
 
-import requests
+import uvloop
+import websockets
 
-from block import Block
-from consensus import get_longest_chain, get_target
 from dao import DAO
-
-db = DAO()
-self_ip = requests.get('http://httpbin.org/ip').json()['origin']
-
-
-def get_chain():
-    local = db.get_chain()
-    remote = []
-    return get_longest_chain(remote + [local])
+from rpc import app
+from rpc.server import ws_handler
+from rpc.handler import chain_mgr, peer_mgr
+from miner import Miner
 
 
-def append_block(block):
-    chain = get_chain()
-    h = sha256()
-    h.update('{}{}{}'.format(chain[-1], block, block.nonce).encode('utf8'))
-    if int(h.hexdigest(), 16) < get_target(chain):
-        db.append_block(block)
-        for nb in get_neighbours():
-            if self_ip not in nb:
-                try:
-                    requests.post('{}/blocks'.format(nb), json=block.__dict__, timeout=1)
-                except:
-                    pass
-    else:
-        print('reject block: {}'.format(block.__dict__))
-        print('solution: {} target: {}'.format(h.hexdigest(), hex(get_target(chain))))
+dao = DAO()
+FORMAT = '%(asctime)-15s %(levelname)s %(module)s %(message)s'
+# FORMAT = '%(asctime)-15s %(message)s'
+logging.basicConfig(format=FORMAT)
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
-def sync_chain():
+async def sync_chain():
     while True:
-        chain = db.get_chain()
-        for nb in get_neighbours():
-            r = requests.get('{}/height'.format(nb), timeout=2)
-            if r.json()['height'] > len(chain):
-                r = requests.get('{}/blocks'.format(nb), timeout=2)
-                chain = [
-                    Block(
-                        data['index'], data['timestamp'], data['data'], data['prev_hash'],
-                        data['target'], nonce=data['nonce'])
-                    for data in r.json()
-                ]
-                db.dump_chain(chain)
-                print('refreshed chain from {}'.format(nb))
-        time.sleep(1)
+        for peer in peer_mgr.get_peers():
+            print('sync {}'.format(str(peer)))
+            await peer.send(json.dumps({'method': 'getheight'}))
+        await asyncio.sleep(1)
 
 
-def find_neighbour():
-    def localhosts():
-        res = subprocess.check_output(['arp', '-a']).decode('utf8')
-        localhosts = [
-            'http://{}:5001'.format(ip)
-            for ip in re.findall(r'192\.168\.[0-9]+\.[0-9]+', res) if '255' not in ip
-        ]
-        localhosts.append('http://198.199.100.231:5001')
-        return localhosts
-
-    for localhost in localhosts():
+async def advertise_self():
+    for peer in peer_mgr.get_peers():
         try:
-            r = requests.get(localhost, params={'msg': '天王盖地虎'}, timeout=1)
-        except requests.exceptions.ConnectionError:
-            continue
+            # print('connecting ', peer
+            with async_timeout.timeout(2):
+                ws = await websockets.connect('ws://{}/ws'.format(peer))
+            await ws.send(json.dumps({
+                'method': 'version',
+                'host': '--',
+                'port': 5001
+            }))
+            # print('connected {}'.format(peer))
+            asyncio.ensure_future(ws_handler(ws))
+        except Exception as e:
+            print(e)
+            print('Connection to {} failed'.format(peer))
 
-        if r.text == '宝塔镇河妖':
-            print('found node {}'.format(localhost))
-            add_addr(localhost)
-        else:
-            print('remove {}'.format(localhost))
-            db.remove_neighbour(localhost)
+
+def main():
+    chain_mgr.chain.build_chain(dao.get_chain())
+    if sys.argv[1] == 'miner':
+        miner = Miner(chain_mgr, peer_mgr)
+        app.add_task(miner.start)
+    app.add_task(sync_chain)
+    app.add_task(advertise_self)
+    app.add_task(chain_mgr.start)
+    app.add_task(peer_mgr.start)
+    app.run(host='0.0.0.0', port=5001)
 
 
-def add_addr(host):
-    db.add_addr(host)
-
-
-def get_neighbours():
-    nb = set(db.get_neighbours())
-    nb.add('http://198.199.100.231:5001')
-    return nb
+if __name__ == '__main__':
+    main()

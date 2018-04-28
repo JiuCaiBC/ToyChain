@@ -1,6 +1,5 @@
 import json
-
-from block import Block, create_genesis_block
+from chain.block import GENISIS_BLOCK
 
 
 class DAO:
@@ -16,51 +15,52 @@ class DAO:
         try:
             with open(self.db_path, 'r') as f:
                 chain = json.load(f)
-            chain = [
-                Block(
-                    block['index'], block['timestamp'], block['data'], block['prev_hash'],
-                    block['target'], nonce=block['nonce'])
-                for block in chain]
-        except:
-            chain = [create_genesis_block()]
+        except Exception as e:
+            print(e)
+            chain = [GENISIS_BLOCK]
             self.dump_chain(chain)
 
         return chain
 
     def get_block(self, block_hash):
         chain = self.get_chain()
-        block = [block for block in chain if block.hash == block_hash]
-        return block[0]
+        block = [block for block in chain if block['hash'] == block_hash]
+        if block:
+            return block[0]
 
     def append_block(self, block):
         chain = self.get_chain()
-        if block.index == chain[-1].index + 1:
-            chain.append(block)
-            self.dump_chain(chain)
+        chain.append(block)
+        self.dump_chain(chain)
 
     def dump_chain(self, chain):
         with open(self.db_path, 'w+') as f:
-            json.dump([block.__dict__ for block in chain], f, indent=4)
+            json.dump(chain, f, indent=4)
 
     def add_addr(self, addr):
-        with open(self.nb_db_path, 'r') as f:
-            neighbours = json.load(f)
-        neighbours.append(addr)
+        neighbours = set(self.get_neighbours())
+        neighbours.add(addr)
         with open(self.nb_db_path, 'w+') as f:
-            json.dump(neighbours, f)
+            json.dump(list(neighbours), f)
 
     def dump_neighbours(self, neighbours):
         with open(self.nb_db_path, 'w+') as f:
-            json.dump(neighbours, f)
+            json.dump(list(set(neighbours)), f)
 
     def get_neighbours(self):
+        nbs = []
         try:
             with open(self.nb_db_path, 'r') as f:
-                return json.load(f)
+                nbs = json.load(f)
         except Exception:
-            return []
+            pass
+
+        return nbs
 
     def remove_neighbour(self, neighbour):
         neighbours = self.get_neighbours()
-        neighbours.remove(neighbour)
+        try:
+            neighbours.remove(neighbour)
+        except ValueError:
+            pass
         self.dump_neighbours(neighbours)

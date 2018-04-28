@@ -5,8 +5,8 @@
         "timestamp": 1524685930.1270132,
         "data": "Hello world:)",
         "prev_hash": "0",
-        "difficulty": 1,
-        "hash": "0bb19c9b5c043d68da054154e98516acb53018cffaec728b4729dc63d4da07af",
+        "target": "0x2000000000000000000000000000000000000000000000000000000000000000",
+        "hash": "25ae8a5763b86bf2f15df3b7e05de94c2e962823e8c30d24482bf1052e9f078a",
         "nonce": 0
     }
 ]
