@@ -36,7 +36,7 @@ class Miner:
             block = Block(**{
                 'index': prev_block.index + 1,
                 'timestamp': time.time(),
-                'data': tx.__dict__ if tx else 'mining test',
+                'data': {'transactions': [tx.__dict__]} if tx else 'mining test',
                 'prev_hash': prev_block.hash,
                 'difficulty': difficulty,
             })
