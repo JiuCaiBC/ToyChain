@@ -6,11 +6,11 @@ class Transaction:
         self.sender = sender
         self.receiver = receiver
         self.amount = amount
-        self.tx_msg = transaction_message
+        self.message = transaction_message
         self.hash = self.hash_tx()
 
     def hash_tx(self):
         hasher = sha256()
         hasher.update('{}{}{}{}'.format(
-            self.sender, self.receiver, self.amount, self.tx_msg).encode('utf8'))
+            self.sender, self.receiver, self.amount, self.message).encode('utf8'))
         return hasher.hexdigest()
