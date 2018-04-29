@@ -66,7 +66,9 @@ async def get_transaction(_):
     Receiver:<br>
     <input type="text" name="receiver" value="0xface"><br>
     Amount:<br>
-    <input type="text" name="amount">
+    <input type="text" name="amount"><br>
+    Message:<br>
+    <input type="text" name="message"><br>
     <br><br>
     <input type="submit" value="Submit">
     </form> 
@@ -82,7 +84,8 @@ async def post_transaction(request):
     tx_data = {
         'sender': request.form.get('sender'),
         'receiver': request.form.get('receiver'),
-        'amount': request.form.get('amount')
+        'amount': request.form.get('amount'),
+        'message': request.form.get('message')
     }
     await handle_transaction(tx_data)
     return html('ok')
