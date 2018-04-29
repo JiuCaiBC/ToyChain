@@ -63,7 +63,8 @@ async def pong(_):
 
 async def handle_transaction(transaction):  # temp
     tx = Transaction(
-        transaction['sender'], transaction['receiver'], transaction['amount'])
+        transaction['sender'], transaction['receiver'], transaction['amount'],
+        transaction_message=transaction.get('message'))
     chain_mgr.add_transaction(tx)
 
 
